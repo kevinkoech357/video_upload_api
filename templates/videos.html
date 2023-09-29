@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Videos</title>
+</head>
+<body>
+    <h1>Videos for {{ user_name }}</h1>
+
+    {% if videos %}
+        <div class="video-container">
+            {% for video in videos %}
+                <video width="320" height="240" controls>
+                    <source src="{{ url_for('serve_video', user_name=user_name, video_name=video) }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <p>{{ video }}</p>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No videos available.</p>
+    {% endif %}
+</body>
+</html>
+

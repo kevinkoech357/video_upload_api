@@ -39,7 +39,6 @@ def upload_video(user_name):
     except Exception as e:
         return jsonify({"message": "An error occurred: " + str(e)}), 500
 
-
 @app.route('/all_videos/<string:user_name>', methods=['GET'])
 def all_videos(user_name):
     try:
@@ -48,7 +47,7 @@ def all_videos(user_name):
             return render_template('videos.html', videos=[], user_name=user_name)
 
         video_files = [f for f in os.listdir(user_uploads_folder) if f.endswith('.mp4')]
-        return render_template('all_videos.html', videos=video_files, user_name=user_name)
+        return render_template('videos.html', videos=video_files, user_name=user_name)
     except Exception as e:
         return jsonify({"message": "An error occurred: " + str(e)}), 500
 
@@ -69,3 +68,4 @@ def serve_video(user_name, video_name):
 
 if __name__ == "__main__":
     app.run(debug=True)
+

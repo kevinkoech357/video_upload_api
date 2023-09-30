@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video List</title>
+    <style>
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .video-item {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        .video-item a {
+            text-decoration: none;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Video List</h1>
+    <div class="container">
+        {% for video_file in video_files %}
+            <div class="video-item">
+                <a href="{{ url_for('serve_video', video_name=video_file) }}">{{ video_file }}</a>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
+

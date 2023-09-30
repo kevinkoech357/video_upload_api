@@ -47,7 +47,7 @@
         {% for video in videos %}
             <li>
                 <video controls>
-                    <source src="{{ url_for('serve_video', user_name=user_name, video_name=video) }}" type="video/mp4">
+                    <source src="{{ url_for('serve_video', video_name=video) }}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
                 <p>{{ video }}</p>

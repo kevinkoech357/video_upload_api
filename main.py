@@ -6,7 +6,7 @@ import mimetypes
 app = Flask(__name__, template_folder="templates")
 
 # Define the path to the static folder for storing user-uploaded videos
-UPLOAD_FOLDER = 'static'
+UPLOAD_FOLDER = 'static/videos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/upload', methods=['POST'])
@@ -20,6 +20,11 @@ def upload_video():
             mimetype = mimetypes.guess_type(filename)[0]
             if not mimetype or not mimetype.startswith('video'):
                 return jsonify({"message": "File is not a video"})
+
+            # Check file extension
+            file_extension = os.path.splitext(filename)[1].lower()
+            if file_extension != '.mp4':
+                return jsonify({"message": "Unsupported video format. Please upload an MP4 file."})
 
             # Define directory path to save videos
             video_uploads_folder = os.path.join(app.config['UPLOAD_FOLDER'])
@@ -74,7 +79,7 @@ def all_videos_list():
             return jsonify({"message": "Video folder not found"}), 404
 
         video_files = [f for f in os.listdir(video_uploads_folder) if f.endswith('.mp4')]
-        return render_template('videos.html', video_files=video_files)
+        return render_template('videos_list.html', video_files=video_files)
     except Exception as e:
         return jsonify({"message": "An error occurred: " + str(e)}), 500
 

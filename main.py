@@ -2,18 +2,37 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 import mimetypes
+import ffmpeg
+import pysrt
+from utils import transcribe_video, generate_srt_subtitle
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__, template_folder="templates")
 
 # Define the path to the static folder for storing user-uploaded videos
 UPLOAD_FOLDER = 'static/videos'
+SUBTITLES_FOLDER = 'static/subtitles'
+AUDIO_TEMP_FOLDER = 'static/audio_temp'  # Temporary folder for audio extraction
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SUBTITLES_FOLDER'] = SUBTITLES_FOLDER
+app.config['AUDIO_TEMP_FOLDER'] = AUDIO_TEMP_FOLDER
+
+# Access the API key using os.environ
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
     try:
         if 'file' in request.files:
             file = request.files['file']
+
+            # Check if the filename is missing
+            if not file.filename:
+                return jsonify({"message": "Missing filename. Please provide a valid filename for the video."}), 400
+
             filename = secure_filename(file.filename)
 
             # Check if file type is in video format
@@ -21,28 +40,42 @@ def upload_video():
             if not mimetype or not mimetype.startswith('video'):
                 return jsonify({"message": "File is not a video"})
 
-            # Check file extension
-            file_extension = os.path.splitext(filename)[1].lower()
-            if file_extension != '.mp4':
-                return jsonify({"message": "Unsupported video format. Please upload an MP4 file."})
-
-            # Define directory path to save videos
+            # Define directory path to save videos and subtitles
             video_uploads_folder = os.path.join(app.config['UPLOAD_FOLDER'])
+            subtitles_folder = os.path.join(app.config['SUBTITLES_FOLDER'])
+            audio_temp_folder = os.path.join(app.config['AUDIO_TEMP_FOLDER'])
 
-            # Check if the directory exists, if not, create it
+            # Check if the directories exist, if not, create them
             if not os.path.exists(video_uploads_folder):
                 os.makedirs(video_uploads_folder)
+            if not os.path.exists(subtitles_folder):
+                os.makedirs(subtitles_folder)
+            if not os.path.exists(audio_temp_folder):
+                os.makedirs(audio_temp_folder)
 
-            # Define the full file path
-            filepath = os.path.join(video_uploads_folder, filename)
+            # Define the full file paths
+            video_filepath = os.path.join(video_uploads_folder, filename)
+            subtitles_filepath = os.path.join(subtitles_folder, os.path.splitext(filename)[0] + '.srt')
+            audio_temp_filepath = os.path.join(audio_temp_folder, os.path.splitext(filename)[0] + '.wav')
 
-            # Save the file to the directory
-            file.save(filepath)
+            # Save the video file to the directory
+            file.save(video_filepath)
 
-            return jsonify({"message": "File uploaded successfully"}), 200
+            # Call the transcription function and get the result
+            transcription_result = transcribe_video(video_filepath, audio_temp_filepath)
+
+            # Generate and save the .srt subtitle file
+            generate_srt_subtitle(subtitles_filepath, transcription_result)
+
+            # Generate URLs for video and subtitles
+            video_url = url_for('serve_video', video_name=filename)
+            subtitles_url = url_for('serve_subtitles', subtitle_name=os.path.basename(subtitles_filepath))
+
+            return jsonify({"message": "File uploaded successfully", "video_url": video_url, "subtitles_url": subtitles_url}), 200
         return jsonify({"message": "No file uploaded"}), 400
     except Exception as e:
         return jsonify({"message": "An error occurred: " + str(e)}), 500
+
 
 @app.route('/all_videos', methods=['GET'])
 def all_videos():
@@ -82,6 +115,24 @@ def all_videos_list():
         return render_template('videos_list.html', video_files=video_files)
     except Exception as e:
         return jsonify({"message": "An error occurred: " + str(e)}), 500
+
+
+@app.route('/serve_subtitles/<string:subtitle_name>', methods=['GET'])
+def serve_subtitles(subtitle_name):
+    try:
+        subtitles_folder = app.config['SUBTITLES_FOLDER']
+        if not os.path.exists(subtitles_folder):
+            return jsonify({"message": "Subtitles folder not found"}), 404
+
+        subtitle_path = os.path.join(subtitles_folder, subtitle_name)
+        if not os.path.exists(subtitle_path):
+            return jsonify({"message": "Subtitles not found"}), 404
+
+        # Serve the subtitle file
+        return send_from_directory(subtitles_folder, subtitle_name)
+    except Exception as e:
+        return jsonify({"message": "An error occurred: " + str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

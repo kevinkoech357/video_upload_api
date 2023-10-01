@@ -6,11 +6,13 @@ import ffmpeg
 import pysrt
 from utils import transcribe_video, generate_srt_subtitle
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__, template_folder="templates")
+CORS(app)
 
 # Define the path to the static folder for storing user-uploaded videos
 UPLOAD_FOLDER = 'static/videos'

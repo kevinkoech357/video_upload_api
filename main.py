@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template, send_from_directory,
 from werkzeug.utils import secure_filename
 import os
 # import mimetypes
-from utils import transcribe_video, generate_srt_subtitle, allowed_file
+from utils import transcribe_video, generate_srt_subtitle
 from flask_cors import CORS
 
 

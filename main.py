@@ -2,14 +2,9 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 import mimetypes
-import ffmpeg
-import pysrt
 from utils import transcribe_video, generate_srt_subtitle
-from dotenv import load_dotenv
 from flask_cors import CORS
 
-# Load environment variables from .env file
-load_dotenv()
 
 app = Flask(__name__, template_folder="templates")
 CORS(app)
@@ -22,8 +17,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['SUBTITLES_FOLDER'] = SUBTITLES_FOLDER
 app.config['AUDIO_TEMP_FOLDER'] = AUDIO_TEMP_FOLDER
 
-# Access the API key using os.environ
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 @app.route('/upload', methods=['POST'])
 def upload_video():

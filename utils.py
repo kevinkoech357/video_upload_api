@@ -11,7 +11,13 @@ load_dotenv()
 # Access the API key using os.environ
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
+ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov'}
+
 openai.api_key = OPENAI_API_KEY
+
+# Helper function to check if the file extension is allowed
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def transcribe_video(video_path, audio_temp_path):
     try:

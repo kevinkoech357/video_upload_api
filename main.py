@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 import os
-import mimetypes
-from utils import transcribe_video, generate_srt_subtitle
+# import mimetypes
+from utils import transcribe_video, generate_srt_subtitle, allowed_file
 from flask_cors import CORS
 
 
@@ -31,9 +31,14 @@ def upload_video():
             filename = secure_filename(file.filename)
 
             # Check if file type is in video format
-            mimetype = mimetypes.guess_type(filename)[0]
-            if not mimetype or not mimetype.startswith('video'):
-                return jsonify({"message": "File is not a video"})
+            # mimetype = mimetypes.guess_type(filename)[0]
+            # if not mimetype or not mimetype.startswith('video'):
+            #   return jsonify({"message": "File is not a video"})
+
+            # Check if the file has an allowed extension
+            if not allowed_file(filename):
+                return jsonify({"message": "Unsupported video format. Please upload a video in one of the supported formats: " + ", ".join(ALLOWED_EXTENSIONS)}), 400
+
 
             # Define directory path to save videos and subtitles
             video_uploads_folder = os.path.join(app.config['UPLOAD_FOLDER'])

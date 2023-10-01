@@ -28,13 +28,13 @@ def transcribe_video(video_path, audio_temp_path):
             .run()
         )
 
-        # Read the extracted audio
-        with open(audio_temp_path, 'rb') as audio_file:
+        # Open the audio file
+        with open(audio_temp_path, "rb") as audio_file:
             audio_content = audio_file.read()
 
         # Transcribe the audio using Whisper
-        response = openai.Transcription.create(
-            audio=audio_content,
+        response = openai.Audio.transcribe(
+            file=audio_file,
             model="whisper",
             language="en-US"
         )

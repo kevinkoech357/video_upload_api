@@ -11,7 +11,7 @@ load_dotenv()
 # Access the API key using os.environ
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
-ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov'}
+ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'webm'}
 
 openai.api_key = OPENAI_API_KEY
 

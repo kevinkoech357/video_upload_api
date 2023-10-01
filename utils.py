@@ -8,10 +8,10 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-openai.api_key = OPENAI_API_KEY
-
 # Access the API key using os.environ
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
+openai.api_key = OPENAI_API_KEY
 
 def transcribe_video(video_path, audio_temp_path):
     try:

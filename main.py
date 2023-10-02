@@ -21,13 +21,13 @@ app.config['AUDIO_TEMP_FOLDER'] = AUDIO_TEMP_FOLDER
 @app.route('/api/upload', methods=['POST'])
 def upload_video():
     try:
-        if 'file' not in request.files:
-            return jsonify(
-                {
-                    "status": "error",
-                    "message": "No video file uploaded!"
-                }
-            )
+        #if 'file' not in request.files:
+        # return jsonify(
+        #        {
+        #            "status": "error",
+        #            "message": "No video file uploaded!"
+        #        }
+        #    )
 
         file = request.files['file']
         # Check if the filename is missing

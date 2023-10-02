@@ -1,138 +1,180 @@
+# API Documentation
 
-## API Documentation
+This API allows users to upload videos, transcribe their audio content, and generate SRT subtitles for the videos. It provides endpoints for uploading videos, accessing the list of uploaded videos, serving video files, and serving SRT subtitle files.
 
-### Overview
+## Base URL
 
-This API provides endpoints for uploading, viewing, and serving user-uploaded videos.
+The base URL for all API endpoints is `/api`.
 
-### Endpoints
+## Table of Contents
 
-* **Upload video:** `/upload/<username>`
-* **View all videos for a user:** `/all_videos/<username>`
-* **Serve a video:** `/serve_video/<username>/<video_name>`
+1. [Upload a Video](#1-upload-a-video)
+2. [List All Uploaded Videos](#2-list-all-uploaded-videos)
+3. [Serve a Video](#3-serve-a-video)
+4. [List All Uploaded Videos (Alternate View)](#4-list-all-uploaded-videos-alternate-view)
+5. [Serve SRT Subtitles](#5-serve-srt-subtitles)
 
-### Request methods
+## 1. Upload a Video
 
-* **Upload video:** `POST`
-* **View all videos for a user:** `GET`
-* **Serve a video:** `GET`
+**Endpoint:** `/upload`
 
-### Request parameters
+**HTTP Method:** POST
 
-* **Upload video:** `file` (required)
+**Description:** Upload a video file for transcription and subtitle generation.
 
-### Responses
+**Request Body:**
 
-* **Upload video:**
-    * `200 OK`: Video uploaded successfully.
-    * `400 Bad Request`: No file uploaded.
-* **View all videos for a user:**
-    * `200 OK`: List of all uploaded videos for the user.
-    * `404 Not Found`: User folder not found.
-* **Serve a video:**
-    * `200 OK`: Video streamed to the user's browser.
-    * `404 Not Found`: Video not found.
+- `file` (multipart/form-data): The video file to be uploaded.
 
-### Example requests and responses
+**Response:**
 
-**Test upload using curl**
+- Status Code: 200 (OK) or 400 (Bad Request) or 500 (Internal Server Error)
+- Content Type: JSON
 
-Test upload using curl
-curl -X POST http://localhost:5000/upload/johndoe -F file=@my_video.mp4
+**Response Body (Success):**
 
-
-HTTP/1.1 200 OK
-Content-Type: application/json
-
+```json
 {
-"message": "File uploaded successfully"
+  "message": "File uploaded successfully",
+  "video_url": "/api/serve_video/<video_name>",
+  "subtitles_url": "/api/serve_subtitles/<subtitle_name>"
 }
+```
+Response Body (Error - Missing Filename):
 
-
-**Test view all videos for a user**
-
-Test view all videos for a user
-curl http://localhost:5000/all_videos/johndoe
-
-
-HTTP/1.1 200 OK
-Content-Type: application/json
-
-[
+```bash
 {
-"filename": "my_video.mp4",
-"upload_date": "2023-09-30T12:00:00Z"
+  "message": "Missing filename. Please provide a valid filename for the video."
 }
-]
+```
+Response Body (Error - Unsupported Format):
 
-
-**Test serve a video**
-
-Test serve a video
-curl http://localhost:5000/serve_video/johndoe/my_video.mp4
-
-
-HTTP/1.1 200 OK
-Content-Type: video/mp4
-
-
-### Error responses
-
-**Upload video**
-
-HTTP/1.1 400 Bad Request
-Content-Type: application/json
-
+```bash
 {
-"message": "No file uploaded"
+  "message": "File is not a video"
 }
+```
+Response Body (Error - Unsupported Video Format):
 
-
-**View all videos for a user**
-
-HTTP/1.1 404 Not Found
-Content-Type: application/json
-
+```bash
 {
-"message": "User folder not found"
+  "message": "Unsupported video format. Please upload a video in one of the supported formats: mp4, avi, mkv, etc."
 }
+```
+Response Body (Error - Internal Server Error):
 
-
-**Serve a video**
-
-HTTP/1.1 404 Not Found
-Content-Type: application/json
-
+```
 {
-"message": "Video not found"
+  "message": "An error occurred: <error_message>"
 }
+```
+2. List All Uploaded Videos
+Endpoint: /all_videos
 
+HTTP Method: GET
 
-### Testing the API with curl
+Description: Retrieve a list of all uploaded videos.
 
-To test the API with curl, you can use the following commands:
+Response:
 
-Test upload using curl
-curl -X POST http://localhost:5000/upload/johndoe -F file=@my_video.mp4
+Status Code: 200 (OK) or 500 (Internal Server Error)
+Content Type: HTML
+Response Body (Success):
 
+HTML page displaying a list of uploaded video files.
 
-Test view all videos for a user
-curl http://localhost:5000/all_videos/johndoe
+Response Body (Error - Internal Server Error):
 
+HTML page displaying an error message.
 
-Test serve a video
-curl http://localhost:5000/serve_video/johndoe/my_video.mp4
+3. Serve a Video
+Endpoint: /serve_video/<string:video_name>
 
+HTTP Method: GET
 
-**Note:** Replace `my_video.mp4` with the name of the video file that you want to upload or serve.
+Description: Serve an uploaded video by its name.
 
-### Troubleshooting
+URL Parameters:
 
-If you are having trouble using the API, please check the following:
+video_name (string): The name of the video file to serve.
+Response:
 
-* Make sure that you are using the correct request method and endpoint.
-* Make sure that you are providing all of the required request parameters.
-* Make sure that you are uploading videos in MP4 format.
-* Make sure that the videos that you are uploading are saved to the user's upload folder.
+Status Code: 200 (OK) or 404 (Not Found) or 500 (Internal Server Error)
+Response Body (Error - Video Folder Not Found):
 
-If you are still having trouble, please open an issue on the GitHub repository.
+```bash
+{
+  "message": "Video folder not found"
+}
+```
+Response Body (Error - Video Not Found):
+
+```
+{
+  "message": "Video not found"
+}
+```
+Note: The video file will be streamed as the response.
+
+4. List All Uploaded Videos (Alternate View)
+Endpoint: /all_videos_list
+
+HTTP Method: GET
+
+Description: Retrieve a list of all uploaded videos in an alternate view.
+
+Response:
+
+Status Code: 200 (OK) or 500 (Internal Server Error)
+Content Type: HTML
+Response Body (Success):
+
+HTML page displaying a list of uploaded video files in an alternate view.
+
+Response Body (Error - Internal Server Error):
+
+HTML page displaying an error message.
+
+5. Serve SRT Subtitles
+Endpoint: /serve_subtitles/<string:subtitle_name>
+
+HTTP Method: GET
+
+Description: Serve an SRT subtitle file by its name.
+
+URL Parameters:
+
+subtitle_name (string): The name of the SRT subtitle file to serve.
+Response:
+
+Status Code: 200 (OK) or 404 (Not Found) or 500 (Internal Server Error)
+Response Body (Error - Subtitles Folder Not Found):
+
+```bash
+{
+  "message": "Subtitles folder not found"
+}
+```
+Response Body (Error - Subtitles Not Found):
+
+```bash
+{
+  "message": "Subtitles not found"
+}
+```
+Note: The SRT subtitle file will be served as the response.
+
+Error Handling
+In case of errors, the API will return a JSON response with an error message and an appropriate HTTP status code.
+Internal server errors (HTTP 500) may occur due to unexpected issues and will include an error message for debugging.
+Usage Notes
+Videos should be uploaded in common video formats such as MP4, AVI, MKV, etc.
+The uploaded videos will be transcribed, and subtitles will be generated automatically.
+Generated subtitles will be served in SRT format.
+
+### Example Usage
+Use the /upload endpoint to upload a video file.
+Access the list of uploaded videos using /all_videos or /all_videos_list.
+Serve a specific video using /serve_video/<video_name>.
+Serve subtitles for a video using /serve_subtitles/<subtitle_name>.
+Note: Replace <video_name> and <subtitle_name> with the actual names of the video and subtitle files.

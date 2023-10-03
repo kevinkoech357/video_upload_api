@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory, url_for
 from werkzeug.utils import secure_filename
 import os
-# import mimetypes
-from utils import generate_srt_subtitle, extract_audio_from_video
+import ffmpeg
 from flask_cors import CORS
 import assemblyai as aai
+import pysrt
 
 app = Flask(__name__, template_folder="templates")
 CORS(app)
@@ -20,18 +20,62 @@ app.config['SUBTITLES_FOLDER'] = SUBTITLES_FOLDER
 app.config['AUDIO_TEMP_FOLDER'] = AUDIO_TEMP_FOLDER
 
 
+ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'webm'}  # Define a set of allowed video file extensions
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def extract_audio_from_video(video_filepath, audio_temp_filepath):
+    try:
+        # Create an FFmpeg process to extract audio and specify the output filename
+        ffmpeg.input(video_filepath).output(audio_temp_filepath).run(overwrite_output=True)
+        return audio_temp_filepath
+    except ffmpeg.Error as e:
+        # Handle FFmpeg errors
+        print(f"FFmpeg error: {e.stderr}")
+        return None
+    except Exception as e:
+        # Handle other exceptions
+        print(f"An error occurred: {str(e)}")
+        return None
+
+def generate_srt_subtitle(subtitle_filepath, transcription_text):
+    try:
+        # Create a SubRipFile
+        subs = pysrt.SubRipFile()
+
+        # Split the transcription text into chunks of text for subtitles (adjust the chunk duration as needed)
+        chunk_duration = 5  # in seconds
+        start_time = pysrt.SubRipTime(0, 0, 0)
+        end_time = pysrt.SubRipTime(0, 0, chunk_duration)
+
+        text_chunks = [transcription_text[i:i + chunk_duration] for i in range(0, len(transcription_text), chunk_duration)]
+
+        # Add subtitles based on text chunks
+        for i, chunk in enumerate(text_chunks):
+            subs.append(pysrt.SubRipItem(index=i + 1, start=start_time, end=end_time, text=chunk, text_styles={"font": "Arial", "size": 16, "color": "#000000"}))
+            start_time = end_time
+            end_time = end_time + pysrt.SubRipTime(0, 0, chunk_duration)
+
+        # Save the SRT subtitle file
+        subs.save(subtitle_filepath, encoding="utf-8")
+
+    except Exception as e:
+        return str(e)
+
+
 @app.route('/api/upload', methods=['POST'])
 def upload_video():
     try:
         #if 'file' not in request.files:
-        # return jsonify(
+        #    return jsonify(
         #        {
-        #            "status": "error",
         #            "message": "No video file uploaded!"
         #        }
-        #    )
+        #    ), 400
 
         file = request.files['file']
+
         # Check if the filename is missing
         if not file.filename:
             return jsonify(
@@ -40,21 +84,14 @@ def upload_video():
                 }
             ), 400
 
+        if not allowed_file(file.filename):
+            return jsonify(
+                {
+                    "message": "Unsupported video format. Please upload a video in one of the supported formats: " + ", ".join(ALLOWED_EXTENSIONS)
+                }
+            ), 400
+
         filename = secure_filename(file.filename)
-
-        # Check if file type is in video format
-        # mimetype = mimetypes.guess_type(filename)[0]
-        # if not mimetype or not mimetype.startswith('video'):
-        #   return jsonify({"message": "File is not a video"})
-
-        # Check if the file has an allowed extension
-        # if not allowed_file(filename):
-        #    return jsonify(
-        #        {
-        #            "message": "Unsupported video format. Please upload a video in one of the supported formats: " + ", ".join(ALLOWED_EXTENSIONS)
-        #        }
-        #    ), 400
-
 
         # Define directory path to save videos and subtitles
         video_uploads_folder = os.path.join(app.config['UPLOAD_FOLDER'])
@@ -77,7 +114,7 @@ def upload_video():
         # Save the video file to the directory
         file.save(video_filepath)
 
-       # Extract the audio from the video file
+        # Extract the audio from the video file
         audio_temp_filepath = extract_audio_from_video(video_filepath, audio_temp_filepath)
 
         # Transcribe the audio file
@@ -104,7 +141,6 @@ def upload_video():
                 "message": "An error occurred: " + str(e)
             }
         ), 500
-
 
 @app.route('/api/all_videos', methods=['GET'])
 def all_videos():

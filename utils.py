@@ -74,18 +74,18 @@ def generate_srt_subtitle(subtitle_filepath, transcription_text):
     except Exception as e:
         return str(e)
 
-def extract_audio_from_video(video_filepath):
-    # Create a ffmpeg subprocess
-    subprocess = ffmpeg.input(video_filepath)
+import ffmpeg
 
-    # Extract the audio stream
-    audio_stream = subprocess.audio
-
-    # Create a temporary file to save the audio
-    audio_temp_filepath = 'audio.wav'
-
-    # Save the audio stream to the temporary file
-    subprocess.output(audio_temp_filepath)
-
-    # Return the path to the temporary file
-    return audio_temp_filepath
+def extract_audio_from_video(video_filepath, audio_temp_filepath):
+    try:
+        # Create an FFmpeg process to extract audio and specify the output filename
+        ffmpeg.input(video_filepath).output(audio_temp_filepath).run()
+        return audio_temp_filepath
+    except ffmpeg.Error as e:
+        # Handle FFmpeg errors
+        print(f"FFmpeg error: {e.stderr}")
+        return None
+    except Exception as e:
+        # Handle other exceptions
+        print(f"An error occurred: {str(e)}")
+        return None

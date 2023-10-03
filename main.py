@@ -78,7 +78,7 @@ def upload_video():
         file.save(video_filepath)
 
        # Extract the audio from the video file
-        audio_temp_filepath = extract_audio_from_video(video_filepath)
+        audio_temp_filepath = extract_audio_from_video(video_filepath, audio_temp_filepath)
 
         # Transcribe the audio file
         transcriber = aai.Transcriber()

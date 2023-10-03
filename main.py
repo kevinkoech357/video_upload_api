@@ -82,7 +82,7 @@ def upload_video():
 
         # Transcribe the audio file
         transcriber = aai.Transcriber()
-        transcript = transcriber.transcribe(audio_filepath)
+        transcript = transcriber.transcribe(audio_temp_filepath)
 
         # Generate and save the .srt subtitle file
         generate_srt_subtitle(subtitles_filepath, transcript)

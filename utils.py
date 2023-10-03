@@ -29,11 +29,11 @@ def transcribe_video(video_path):
         audio_clip = video_clip.audio
 
         # Save the audio to a temporary file
-        audio_temp_path = "temp_audio.wav"
-        audio_clip.write_audiofile(audio_temp_path, codec="pcm_s16le")
+        with open("temp_audio.wav", "wb") as f:
+            audio_clip.write_audiofile(f, codec="pcm_s16le")
 
         # Transcribe the audio using AssemblyAI
-        response = assemblyai.Transcribe.create(audio_url=audio_temp_path)
+        response = assemblyai.Transcribe.create(audio_url="temp_audio.wav")
 
         # Wait for the transcription to complete (this may take a while)
         response.wait()
@@ -42,7 +42,7 @@ def transcribe_video(video_path):
         transcription_text = response.get()["text"]
 
         # Delete the temporary audio file
-        os.remove(audio_temp_path)
+        os.remove("temp_audio.wav")
 
         return transcription_text
     except Exception as e:
@@ -59,16 +59,16 @@ def generate_srt_subtitle(subtitle_filepath, transcription_text):
         start_time = pysrt.SubRipTime(0, 0, 0)
         end_time = pysrt.SubRipTime(0, 0, chunk_duration)
 
-        text_chunks = [transcription_text[i:i+chunk_duration] for i in range(0, len(transcription_text), chunk_duration)]
+        text_chunks = [transcription_text[i:i + chunk_duration] for i in range(0, len(transcription_text), chunk_duration)]
 
         # Add subtitles based on text chunks
         for i, chunk in enumerate(text_chunks):
-            subs.append(pysrt.SubRipItem(index=i + 1, start=start_time, end=end_time, text=chunk))
+            subs.append(pysrt.SubRipItem(index=i + 1, start=start_time, end=end_time, text=chunk, text_styles={"font": "Arial", "size": 16, "color": "#000000"}))
             start_time = end_time
             end_time = end_time + pysrt.SubRipTime(0, 0, chunk_duration)
 
         # Save the SRT subtitle file
-        subs.save(subtitle_filepath, encoding='utf-8')
+        subs.save(subtitle_filepath, encoding="utf-8")
 
     except Exception as e:
         return str(e)

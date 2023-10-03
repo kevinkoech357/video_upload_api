@@ -76,7 +76,7 @@ def upload_video():
         file.save(video_filepath)
 
         # Call the transcription function and get the result
-        transcription_result = transcribe_video(video_filepath, audio_temp_filepath)
+        transcription_result = transcribe_video(video_filepath)
 
         # Generate and save the .srt subtitle file
         generate_srt_subtitle(subtitles_filepath, transcription_result)

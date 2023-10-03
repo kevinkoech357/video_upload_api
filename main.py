@@ -9,8 +9,6 @@ import pysrt
 app = Flask(__name__, template_folder="templates")
 CORS(app)
 
-aai.settings.api_key = f"fd3f4248151d4181a2299f79bf2c7b42"
-
 # Define the path to the static folder for storing user-uploaded videos
 UPLOAD_FOLDER = 'static/videos'
 SUBTITLES_FOLDER = 'static/subtitles'

@@ -1,53 +1,6 @@
-#import os
-#import moviepy.editor as mp
-#import assemblyai
+import os
 import pysrt
-#from dotenv import load_dotenv
-import ffmpeg
 
-
-# Load environment variables from .env file
-#load_dotenv()
-
-# Access the AssemblyAI API key using os.environ
-#ASSEMBLYAI_API_KEY = os.environ.get("ASSEMBLYAI_API_KEY")
-
-# Initialize the AssemblyAI client
-#assemblyai.api_key = ASSEMBLYAI_API_KEY
-
-# ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'webm'}
-
-# Helper function to check if the file extension is allowed
-# def allowed_file(filename):
-#    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def transcribe_video(video_path):
-    try:
-        # Load the video using MoviePy
-        video_clip = mp.VideoFileClip(video_path)
-
-        # Extract audio from the video
-        audio_clip = video_clip.audio
-
-        # Save the audio to a temporary file
-        with open("temp_audio.wav", "wb") as f:
-            audio_clip.write_audiofile(f, codec="pcm_s16le")
-
-        # Transcribe the audio using AssemblyAI
-        response = assemblyai.Transcribe.create(audio_url="temp_audio.wav")
-
-        # Wait for the transcription to complete (this may take a while)
-        response.wait()
-
-        # Get the transcription text
-        transcription_text = response.get()["text"]
-
-        # Delete the temporary audio file
-        os.remove("temp_audio.wav")
-
-        return transcription_text
-    except Exception as e:
-        return str(e)
 
 
 def generate_srt_subtitle(subtitle_filepath, transcription_text):
@@ -74,18 +27,4 @@ def generate_srt_subtitle(subtitle_filepath, transcription_text):
     except Exception as e:
         return str(e)
 
-import ffmpeg
 
-def extract_audio_from_video(video_filepath, audio_temp_filepath):
-    try:
-        # Create an FFmpeg process to extract audio and specify the output filename
-        ffmpeg.input(video_filepath).output(audio_temp_filepath).run()
-        return audio_temp_filepath
-    except ffmpeg.Error as e:
-        # Handle FFmpeg errors
-        print(f"FFmpeg error: {e.stderr}")
-        return None
-    except Exception as e:
-        # Handle other exceptions
-        print(f"An error occurred: {str(e)}")
-        return None

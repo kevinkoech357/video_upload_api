@@ -1,18 +1,19 @@
-import os
-import moviepy.editor as mp
-import assemblyai
+#import os
+#import moviepy.editor as mp
+#import assemblyai
 import pysrt
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
+import ffmpeg
 
 
 # Load environment variables from .env file
-load_dotenv()
+#load_dotenv()
 
 # Access the AssemblyAI API key using os.environ
-ASSEMBLYAI_API_KEY = os.environ.get("ASSEMBLYAI_API_KEY")
+#ASSEMBLYAI_API_KEY = os.environ.get("ASSEMBLYAI_API_KEY")
 
 # Initialize the AssemblyAI client
-assemblyai.api_key = ASSEMBLYAI_API_KEY
+#assemblyai.api_key = ASSEMBLYAI_API_KEY
 
 # ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'webm'}
 
@@ -72,3 +73,19 @@ def generate_srt_subtitle(subtitle_filepath, transcription_text):
 
     except Exception as e:
         return str(e)
+
+def extract_audio_from_video(video_filepath):
+    # Create a ffmpeg subprocess
+    subprocess = ffmpeg.input(video_filepath)
+
+    # Extract the audio stream
+    audio_stream = subprocess.audio
+
+    # Create a temporary file to save the audio
+    audio_temp_filepath = 'audio.wav'
+
+    # Save the audio stream to the temporary file
+    subprocess.output(audio_temp_filepath)
+
+    # Return the path to the temporary file
+    return audio_temp_filepath

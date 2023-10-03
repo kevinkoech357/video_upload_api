@@ -2,12 +2,14 @@ from flask import Flask, request, jsonify, render_template, send_from_directory,
 from werkzeug.utils import secure_filename
 import os
 # import mimetypes
-from utils import transcribe_video, generate_srt_subtitle
+from utils import generate_srt_subtitle, extract_audio_from_video
 from flask_cors import CORS
-
+import assemblyai as aai
 
 app = Flask(__name__, template_folder="templates")
 CORS(app)
+
+aai.settings.api_key = f"fd3f4248151d4181a2299f79bf2c7b42"
 
 # Define the path to the static folder for storing user-uploaded videos
 UPLOAD_FOLDER = 'static/videos'
@@ -75,11 +77,15 @@ def upload_video():
         # Save the video file to the directory
         file.save(video_filepath)
 
-        # Call the transcription function and get the result
-        transcription_result = transcribe_video(video_filepath)
+       # Extract the audio from the video file
+        audio_temp_filepath = extract_audio_from_video(video_filepath)
+
+        # Transcribe the audio file
+        transcriber = aai.Transcriber()
+        transcript = transcriber.transcribe(audio_filepath)
 
         # Generate and save the .srt subtitle file
-        generate_srt_subtitle(subtitles_filepath, transcription_result)
+        generate_srt_subtitle(subtitles_filepath, transcript)
 
         # Generate URLs for video and subtitles
         video_url = url_for('serve_video', video_name=filename)
@@ -107,7 +113,7 @@ def all_videos():
         if not os.path.exists(video_uploads_folder):
             return render_template('videos.html', videos=[])
 
-        video_files = [f for f in os.listdir(video_uploads_folder) if f.endswith('.mp4')]
+        video_files = [f for f in os.listdir(video_uploads_folder) if any(f.endswith(ext) for ext in ['.mp4', '.avi', '.mkv', '.wmv'])]
         return render_template('videos.html', videos=video_files)
     except Exception as e:
         return jsonify({"message": "An error occurred: " + str(e)}), 500
@@ -134,7 +140,7 @@ def all_videos_list():
         if not os.path.exists(video_uploads_folder):
             return jsonify({"message": "Video folder not found"}), 404
 
-        video_files = [f for f in os.listdir(video_uploads_folder) if f.endswith('.mp4')]
+        video_files = [f for f in os.listdir(video_uploads_folder) if any(f.endswith(ext) for ext in ['.mp4', '.avi', '.mkv', '.wmv'])]
         return render_template('videos_list.html', video_files=video_files)
     except Exception as e:
         return jsonify({"message": "An error occurred: " + str(e)}), 500
